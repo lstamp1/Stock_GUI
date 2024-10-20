@@ -50,6 +50,9 @@ class StockApp(tk.Tk):
 
         self.title("Stock App")
         self.geometry("800x600")
+        self.icon = tk.PhotoImage(file="money_icon.ico")
+        self.iconphoto(False, self.icon)
+
         
         self.menubar = tk.Menu(self)
         self.config(menu=self.menubar)  # Set the menubar to the root window
