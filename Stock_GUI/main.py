@@ -155,12 +155,14 @@ class StockApp(tk.Tk):
         market_cap0 = info.get('marketCap')
         
         if market_cap0 is None:
-            while market_cap0 is None:
+            i = 0
+            while i < 5:
                 stock = yf.Ticker(ticker)
                 info = stock.info
                 market_cap0 = info.get('marketCap')
                 time.sleep(.1)
                 print("API ERROR")
+                i+=1
                 
                 pass
         
