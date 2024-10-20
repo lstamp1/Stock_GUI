@@ -191,8 +191,10 @@ class StockApp(tk.Tk):
         plt.title(f"{ticker} Stock Opening Prices")
         plt.xlabel("Date")
         plt.ylabel("Price (USD)")
-        plt.legend()
 
+        mean_line_1 = np.mean(opens)
+        plt.axhline(mean_line_1, color = 'b', linestyle = '--', label = f'Mean: {mean_line_1:.2f}')
+        plt.legend()
         # Embed the plot in tkinter
         if hasattr(self, 'canvas'):
             self.canvas.get_tk_widget().destroy()
