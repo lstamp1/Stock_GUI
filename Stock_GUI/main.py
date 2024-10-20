@@ -5,9 +5,12 @@
 # Objective: 
 # Given: a day's open, high, low, close, Adj close, and volume, 
 # Determine: next day's close using machine learning
- 
 
-# Push to GIT
+
+#### Get updates
+# git pull
+
+##### Push to GIT
 # git add .
 # git commit -m "MESSAGE"
 # git push origin main
@@ -23,11 +26,13 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 from datetime import datetime, timedelta
 from matplotlib.ticker import MaxNLocator
-from yfin_handle import yf_Dataframe
+from yfin_handle import yf_Dataframe, yf_Dataframe2
 import tkinter as tk
 from tkinter import ttk
 from tkinter.constants import LEFT
 from tkcalendar import DateEntry
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 ########################### CONFIG #####################################
@@ -64,7 +69,7 @@ class StockApp(tk.Tk):
         self.stock_ticker_label.pack(side = LEFT)
         self.stock_ticker_entry = tk.Entry(self.frame1)
         self.stock_ticker_entry.pack(side = LEFT)
-        self.stock_enter_button = tk.Button(self.frame1, text="Generate Plots")
+        self.stock_enter_button = tk.Button(self.frame1, text="Generate Plots", command=self.create_analysis_plots)
         self.stock_enter_button.pack(side = LEFT)
         
         self.start_date_label = tk.Label(self.frame1, 
@@ -82,15 +87,49 @@ class StockApp(tk.Tk):
         self.cal_end.pack(side = LEFT)
         
         
-        self.create_analysis_plots()
+        # self.create_analysis_plots()
         
         
     def create_analysis_plots(self):
+        plt.clf()
         ticker = self.stock_ticker_entry.get()
         start_date = self.cal_start.get()
+        end_date = self.cal_end.get()
         
         print(ticker)
         print(start_date)
+        stock_df=[]
+        stock_df = yf_Dataframe2(ticker, start_date, end_date)
+        stock_df.reset_index(inplace=True)
+        dates      = stock_df['Date']
+        opens      = stock_df['Open']
+        highs      = stock_df['High']
+        lows       = stock_df['Low']
+        closes     = stock_df['Close']
+        adj_closes = stock_df['Adj Close']
+        volume     = stock_df['Volume']
+        
+        # Clear any previous plots
+        
+
+        # Plot using plt.plot()
+        plt.plot(dates, opens, label = 'Opens')
+        plt.title(f"{ticker} Stock Prices")
+        plt.xlabel("Date")
+        plt.ylabel("Price (USD)")
+        plt.legend()
+
+        # Embed the plot in tkinter
+        if hasattr(self, 'canvas'):
+            self.canvas.get_tk_widget().destroy()
+        self.canvas = FigureCanvasTkAgg(plt.gcf(), master=self.frame2)  # plt.gcf() gets the current figure
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        
+        
+        
+        
         
         
         
