@@ -33,6 +33,7 @@ from tkinter.constants import LEFT, TOP
 from tkcalendar import DateEntry
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import time
 
 
 ########################### CONFIG #####################################
@@ -145,16 +146,28 @@ class StockApp(tk.Tk):
         start_date = self.cal_start.get()
         end_date = self.cal_end.get()
         
-        
+        stock = []
+        info = []
         stock = yf.Ticker(ticker)
         info = stock.info
         self.normal_state()
         self.clear_all_entry()
-        market_cap = info.get('marketCap')
-        if market_cap >= 1000000000:
-            market_cap = str(round(int(market_cap) / 1000000000,1)) + "B"
+        market_cap0 = info.get('marketCap')
+        
+        if market_cap0 is None:
+            while market_cap0 is None:
+                stock = yf.Ticker(ticker)
+                info = stock.info
+                market_cap0 = info.get('marketCap')
+                time.sleep(.1)
+                print("API ERROR")
+                
+                pass
+        
+        if market_cap0 >= 1000000000:
+            market_cap = str(round(int(market_cap0) / 1000000000,1)) + "B"
         else:
-            market_cap = str(round(int(market_cap) / 1000000,1)) + "M"
+            market_cap = str(round(int(market_cap0) / 1000000,1)) + "M"
         dividend_yield = info.get('dividendYield')
         fifty_two_week_high = info.get('fiftyTwoWeekHigh')
         fifty_two_week_low = info.get('fiftyTwoWeekLow')
@@ -202,7 +215,7 @@ class StockApp(tk.Tk):
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
-        
+        plt.close()
         # Plot for tab2
         plt.figure()  # Create another figure for tab2
         plt.plot(dates, closes, label='Closes', color='red')
@@ -217,7 +230,7 @@ class StockApp(tk.Tk):
         self.canvas2 = FigureCanvasTkAgg(plt.gcf(), master=self.tab2)  # Embed in tab2
         self.canvas2.draw()
         self.canvas2.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
+        plt.close()
         
         
     def clear_all_entry(self):
