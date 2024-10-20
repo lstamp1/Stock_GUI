@@ -29,7 +29,7 @@ from matplotlib.ticker import MaxNLocator
 from yfin_handle import yf_Dataframe, yf_Dataframe2
 import tkinter as tk
 from tkinter import ttk
-from tkinter.constants import LEFT
+from tkinter.constants import LEFT, TOP
 from tkcalendar import DateEntry
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -61,7 +61,19 @@ class StockApp(tk.Tk):
         self.frame1.place(relx=0.05, rely=0.01, relwidth=.9, relheight=.1)
         
         self.frame2 = tk.LabelFrame(self, text = 'Analysis')
-        self.frame2.place(relx=0.05, rely=0.15, relwidth=.9, relheight=.8)
+        self.frame2.place(relx=0.05, rely=0.15, relwidth=.8, relheight=.8)
+        
+        self.frame3 = tk.LabelFrame(self, text = 'Constants')
+        self.frame3.place(relx=0.85, rely=0.15, relwidth=.1, relheight=.8)
+        
+        
+        
+        self.notebook = ttk.Notebook(self.frame2)
+        self.tab1 = ttk.Frame(self.notebook)
+        self.tab2 = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab1, text="Opens")
+        self.notebook.add(self.tab2, text="Closes")
+        self.notebook.pack(expand=True, fill="both")
         
         
         
@@ -87,6 +99,40 @@ class StockApp(tk.Tk):
         self.cal_end.pack(side = LEFT)
         
         
+        
+        ########### Frame 3 Stats ############
+        # 52 Week High
+        self.y_high_label = tk.Label(self.frame3, text = "52 Week High")
+        self.y_high_label.pack(side = TOP)
+        self.y_high_entry = ttk.Entry(self.frame3, justify="center")
+        self.y_high_entry.insert(0, "-")
+        self.y_high_entry.pack(side = TOP)
+        self.y_high_entry.config(state = "readonly")
+        # 52 Week Low
+        self.y_low_label = tk.Label(self.frame3, text = "52 Week low")
+        self.y_low_label.pack(side = TOP)
+        self.y_low_entry = ttk.Entry(self.frame3, justify="center")
+        self.y_low_entry.insert(0, "-")
+        self.y_low_entry.pack(side = TOP)
+        self.y_low_entry.config(state = "readonly")
+        # Market Cap
+        self.y_mc_label = tk.Label(self.frame3, text = "Market Cap")
+        self.y_mc_label.pack(side = TOP)
+        self.y_mc_entry = ttk.Entry(self.frame3, justify="center")
+        self.y_mc_entry.insert(0, "-")
+        self.y_mc_entry.pack(side = TOP)
+        self.y_mc_entry.config(state = "readonly")
+        # Dividend 
+        self.y_div_label = tk.Label(self.frame3, text = "Dividend")
+        self.y_div_label.pack(side = TOP)
+        self.y_div_entry = ttk.Entry(self.frame3, justify="center")
+        self.y_div_entry.insert(0, "-")
+        self.y_div_entry.pack(side = TOP)
+        self.y_div_entry.config(state = "readonly")
+        
+        
+        
+        
         # self.create_analysis_plots()
         
         
@@ -95,6 +141,31 @@ class StockApp(tk.Tk):
         ticker = self.stock_ticker_entry.get()
         start_date = self.cal_start.get()
         end_date = self.cal_end.get()
+        
+        
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        self.normal_state()
+        self.clear_all_entry()
+        market_cap = info.get('marketCap')
+        if market_cap >= 1000000000:
+            market_cap = str(round(int(market_cap) / 1000000000,1)) + "B"
+        else:
+            market_cap = str(round(int(market_cap) / 1000000,1)) + "M"
+        dividend_yield = info.get('dividendYield')
+        fifty_two_week_high = info.get('fiftyTwoWeekHigh')
+        fifty_two_week_low = info.get('fiftyTwoWeekLow')
+        print(fifty_two_week_high)
+        
+        self.y_high_entry.insert(0, str(fifty_two_week_high))
+        self.y_low_entry.insert(0, fifty_two_week_low)
+        self.y_mc_entry.insert(0, market_cap)
+        self.y_div_entry.insert(0, dividend_yield)
+        
+        self.read_only()
+        
+        
+        
         
         print(ticker)
         print(start_date)
@@ -114,7 +185,7 @@ class StockApp(tk.Tk):
 
         # Plot using plt.plot()
         plt.plot(dates, opens, label = 'Opens')
-        plt.title(f"{ticker} Stock Prices")
+        plt.title(f"{ticker} Stock Opening Prices")
         plt.xlabel("Date")
         plt.ylabel("Price (USD)")
         plt.legend()
@@ -122,13 +193,45 @@ class StockApp(tk.Tk):
         # Embed the plot in tkinter
         if hasattr(self, 'canvas'):
             self.canvas.get_tk_widget().destroy()
-        self.canvas = FigureCanvasTkAgg(plt.gcf(), master=self.frame2)  # plt.gcf() gets the current figure
+        self.canvas = FigureCanvasTkAgg(plt.gcf(), master=self.tab1)  # plt.gcf() gets the current figure
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        
+        
+        # Plot for tab2
+        plt.figure()  # Create another figure for tab2
+        plt.plot(dates, closes, label='Closes', color='red')
+        plt.title(f"{ticker} Stock Closing Prices")
+        plt.xlabel("Date")
+        plt.ylabel("Price (USD)")
+        plt.legend()
+        
+        # Embed plot in tab2
+        if hasattr(self, 'canvas2'):
+            self.canvas2.get_tk_widget().destroy()
+        self.canvas2 = FigureCanvasTkAgg(plt.gcf(), master=self.tab2)  # Embed in tab2
+        self.canvas2.draw()
+        self.canvas2.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
         
         
+    def clear_all_entry(self):
+        self.y_high_entry.delete(0,tk.END)
+        self.y_low_entry.delete(0,tk.END)
+        self.y_mc_entry.delete(0,tk.END)
+        self.y_div_entry.delete(0,tk.END)
         
+    def read_only(self):
+        self.y_high_entry.config(state = "readonly")
+        self.y_low_entry.config(state = "readonly")
+        self.y_mc_entry.config(state = "readonly")
+        self.y_div_entry.config(state = "readonly")
+        
+    def normal_state(self):
+        self.y_high_entry.config(state = "normal")
+        self.y_low_entry.config(state = "normal")
+        self.y_mc_entry.config(state = "normal")
+        self.y_div_entry.config(state = "normal")
         
         
         
@@ -250,141 +353,3 @@ box_df = pd.DataFrame(opens, closes)
 print(f'Standard Deviation: {std_dev}')
 print(f'Mean: {mean}')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Generate the DataFrame from Yahoo Finance Data
-# #data_timeframe = 365
-# #today = datetime.today().strftime('%Y-%m-%d')
-# #one_year_ago = (datetime.today() - timedelta(days=data_timeframe)).strftime('%Y-%m-%d')
-# #symbol = "nvda"
-# #yf_nvda_data = yf.download(symbol, start=today, end=one_year_ago)
-
-# #print(f"the data looks like \n {yf_nvda_data}")
-
-
-# #msft = yf.Ticker("MSFT")
-
-
-# #msft.info
-# #print(f"the data looks like \n {msft.info}")
-
-
-
-
-# # Generate the DataFrame from CSV Data
-# df = pd.read_csv("nvidia_stock_data.csv")
-# print(f"The df structure looks like... \n {df}")
-
-# # Create a second DF that will hold the new data analysis
-# df_gen = df
-
-
-# # Break out Columns
-# dates      = df['Date']
-# opens      = df['Open']
-# highs      = df['High']
-# lows       = df['Low']
-# closes     = df['Close']
-# adj_closes = df['Adj Close']
-# volume     = df['Volume']
-
-
-# ########################### COLUMN GEN ##################################
-
-# # Daily Price Change
-# day_results = []
-# for i,j in zip(opens, closes):
-#     if j > i:
-#         day_results.append('Higher') # Ended Higher
-#     else:
-#         day_results.append('Lower') # Ended Lower
-# df_gen['Daily Moves'] = day_results # Add column to new DF
-
-# # Create column for daily moves ($)
-# daily_moves_value = []
-# for i,j in zip(opens, closes):
-#     daily_moves_value.append(j-i)
-# df_gen["Daily Moves ($)"] = daily_moves_value
-
-# # Create column for daily moves (%)
-# daily_moves_percent = []
-# for i,j in zip(opens, closes):
-#     daily_moves_percent.append(((j-i)/i)*100)
-# df_gen["Daily Moves (%)"] = daily_moves_percent 
-
-# # Intraday Value Change (% Change from yesterday to today)
-# df_gen['Intraday Change (%)'] = df_gen['Close'].diff()
-
-# # Volitility
-# df_gen['Daily Volatility (30-day)'] = df_gen['Daily Moves (%)'].rolling(window=30).std() * np.sqrt(252)
-
-# # High Low Daily Difference
-# daily_difference_value = []
-# for c,b in zip(highs, lows):
-#     daily_difference_value.append(c-b)
-# df_gen["High Low Daily Difference"] = daily_difference_value
-
-# # Closes Adj_closes Daily Difference
-# daily_close_diff_value = []
-# for n,m in zip(closes, adj_closes):
-#     daily_close_diff_value.append(m-n)
-# df_gen["closes adj_closes daily difference"] = daily_close_diff_value
-
-
-
-
-
-
-
-# print(f"New dataset = \n {df_gen}")
-
-# ########################### ANALYSIS ##################################
-
-# # Generate Plot
-# df.plot.scatter(x = 'Date', y = 'Close')
-# plt.xlabel('Date')  
-# plt.ylabel('Price ($)')  
-# plt.title('NVDA Price Close') 
-# plt.gca().xaxis.set_major_locator(MaxNLocator(5))
-# plt.grid()
-# plt.show()
-# #plt.plot()
-
-
-
-
-
-
-
-
-
-
-
-
-# # My BreakPoint
