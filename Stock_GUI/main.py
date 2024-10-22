@@ -32,7 +32,7 @@ from tkinter import ttk
 from tkinter.constants import LEFT, TOP
 from tkcalendar import DateEntry
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import time
 
 
@@ -211,12 +211,20 @@ class StockApp(tk.Tk):
 
         mean_line_1 = np.mean(opens)
         plt.axhline(mean_line_1, color = 'b', linestyle = '--', label = f'Mean: {mean_line_1:.2f}')
+        
+        
+        # 7 day moving average
+        stock_df['7 Day Moving Average'] = stock_df['Open'].rolling(window = 7).mean()
+        plt.plot(dates, stock_df['7 Day Moving Average'], label = '7D MA')
+        
         plt.legend()
         # Embed the plot in tkinter
         if hasattr(self, 'canvas'):
             self.canvas.get_tk_widget().destroy()
         self.canvas = FigureCanvasTkAgg(plt.gcf(), master=self.tab1)  # plt.gcf() gets the current figure
         self.canvas.draw()
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        self.toolbar.update()
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         
         plt.close()
