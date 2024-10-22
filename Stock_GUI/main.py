@@ -137,6 +137,8 @@ class StockApp(tk.Tk):
         
         
         
+        
+        
         # self.create_analysis_plots()
         
         
@@ -224,7 +226,15 @@ class StockApp(tk.Tk):
         plt.title(f"{ticker} Stock Closing Prices")
         plt.xlabel("Date")
         plt.ylabel("Price (USD)")
+        
+        mean_line_2 = np.mean(closes)
+        plt.axhline(mean_line_2, color = 'g', linestyle = '--', label = f'Mean: {mean_line_2:.2f}')
         plt.legend()
+
+
+      
+        
+       
         
         # Embed plot in tab2
         if hasattr(self, 'canvas2'):
